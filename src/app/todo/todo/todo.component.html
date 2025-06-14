@@ -1,0 +1,26 @@
+<div class="todo-container">
+  <img src="assets/Todo Background1.png" alt="Todo Background" class="full-bg" />
+  <div class="content-overlay">
+    <div class="top-controls">
+      <div *ngIf="showSignIn" id="google-signin-container">
+        <button class="google-button" (click)="signInWithGoogle()">
+          <img src="assets/Google__G__logo.svg" width="20" style="margin-right: 8px;" />
+          Sign in with Google
+        </button>
+      </div>
+      <button class="todo-button" (click)="createTodoSheet()" [disabled]="showSignIn">
+        Open Today's Todo Sheet
+      </button>
+      <button class="todo-button" (click)="loadMoreSheets()" [disabled]="loading || showSignIn">
+        {{ loading ? 'Loading...' : 'Load More Sheets' }}
+      </button>
+    </div>
+
+    <ul *ngIf="sheetItems.length" class="sheet-list">
+      <li *ngFor="let sheet of sheetItems" (click)="openSheet(sheet.id)" class="sheet-item">
+        <span class="sheet-name">{{ sheet.name }}</span>
+        <span class="sheet-date">{{ sheet.createdTime | date:'short' }}</span>
+      </li>
+    </ul>
+  </div>
+</div>
