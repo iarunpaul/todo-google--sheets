@@ -61,6 +61,7 @@ export class TodoComponent implements OnInit {
   async loadMoreSheets() {
     if (!this.auth.accessToken) {
       console.warn('Not authenticated. Please sign in.');
+      this.showSignIn = true; // Show sign-in button if not authenticated
       return;
     }
     if (this.loading) return;
@@ -95,6 +96,7 @@ export class TodoComponent implements OnInit {
 
   async createTodoSheet() {
     if (!this.auth.accessToken) {
+      this.showSignIn = true; // Show sign-in button if not authenticated
       console.warn('Not authenticated. Please sign in.');
       return;
     }
