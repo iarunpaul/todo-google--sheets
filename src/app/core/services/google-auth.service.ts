@@ -10,7 +10,7 @@ export class GoogleAuthService {
   private SCOPES = 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive';
   private tokenClient: any;
   public accessToken: string | null = null;
-
+  private accessTokenExpiresAt: number | null = null;
 
   async init(): Promise<void> {
     await this.loadGapi();
@@ -28,8 +28,7 @@ export class GoogleAuthService {
       client_id: this.CLIENT_ID,
       scope: this.SCOPES,
       callback: (resp: any) => {
-        this.accessToken = resp.access_token!;
-        gapi.client.setToken({ access_token: this.accessToken });
+        this.setAccessToken(resp.access_token, resp.expires_in);
       }
     });
   }
@@ -48,14 +47,23 @@ export class GoogleAuthService {
         if (resp.error) {
           console.error('Error requesting access token:', resp.error);
           reject(resp.error);
-          return;
+        } else {
+          this.setAccessToken(resp.access_token, resp.expires_in);
+          resolve(this.accessToken);
         }
-        this.accessToken = resp.access_token;
-        gapi.client.setToken({ access_token: this.accessToken });
-        resolve(this.accessToken);
       };
       this.tokenClient.requestAccessToken();
     });
+  }
+
+  isTokenExpired(): boolean {
+    return !this.accessToken || !this.accessTokenExpiresAt || Date.now() > this.accessTokenExpiresAt;
+  }
+
+  private setAccessToken(token: string, expiresIn: number) {
+    this.accessToken = token;
+    this.accessTokenExpiresAt = Date.now() + expiresIn * 1000; // Convert to ms
+    gapi.client.setToken({ access_token: this.accessToken });
   }
 
   private loadGapi(): Promise<void> {

@@ -59,7 +59,7 @@ export class TodoComponent implements OnInit {
 
 
   async loadMoreSheets() {
-    if (!this.auth.accessToken) {
+    if (!this.auth.accessToken || this.auth.isTokenExpired?.()) {
       console.warn('Not authenticated. Please sign in.');
       this.showSignIn = true; // Show sign-in button if not authenticated
       return;
@@ -95,9 +95,9 @@ export class TodoComponent implements OnInit {
   }
 
   async createTodoSheet() {
-    if (!this.auth.accessToken) {
-      this.showSignIn = true; // Show sign-in button if not authenticated
-      console.warn('Not authenticated. Please sign in.');
+    if (!this.auth.accessToken || this.auth.isTokenExpired?.()) {
+      this.showSignIn = true;
+      console.warn('Access token missing or expired. Please sign in.');
       return;
     }
 
@@ -116,9 +116,27 @@ export class TodoComponent implements OnInit {
       const sheetId = await this.sheets.createStyledTodoSheet(sheetTitle);
       const values = [['Example Task']];
       await this.sheets.populateSheet(sheetId, 'B2', values);
+
+      // Push the newly created sheet to the top of the list
+      this.sheetItems.unshift({
+        id: sheetId,
+        name: sheetTitle,
+        createdTime: today.toISOString()
+      });
+
       this.sheets.openSheet(sheetId);
-    } catch (err) {
-      console.error('Sheet creation error:', err);
+    } catch (err: any) {
+      const isUnauth =
+        err?.status === 401 ||
+        err?.result?.error?.status === 'UNAUTHENTICATED' ||
+        (typeof err?.body === 'string' && err.body.includes('"code": 401'));
+
+      if (isUnauth) {
+        this.showSignIn = true;
+        console.warn('Authentication error. Please sign in.');
+      } else {
+        console.error('Sheet creation error:', err);
+      }
     }
   }
 
